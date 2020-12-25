@@ -1,0 +1,17 @@
+language: python
+python: "3.6"
+
+matrix:
+  include:
+    - env: TORCH_VER="0.4.1"
+    - env: TORCH_VER="0.4.0"
+
+sudo: false
+
+install: bash ./.travis/install.sh
+
+before_script:
+  - cp ./unittests/run_all_test.sh .
+
+script:
+  - bash run_all_test.sh

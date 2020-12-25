@@ -1,0 +1,69 @@
+data_configs:
+  lang_pair: "de-en"
+  train_data:
+    - "./unittests/data/train.de"
+    - "./unittests/data/train.en"
+  valid_data:
+    - "./unittests/data/dev.de"
+    - "./unittests/data/dev.en"
+  bleu_valid_reference: "./unittests/data/dev.en"
+  vocabularies:
+    - type: "bpe"
+      dict_path: "./unittests/data/vocab.bpe.32000.json"
+      max_n_words: 500
+      codes: "./unittests/data/bpe.32000"
+    - type: "bpe"
+      dict_path: "./unittests/data/vocab.bpe.32000.json"
+      max_n_words: 500
+      codes: "./unittests/data/bpe.32000"
+  max_len:
+    - 20
+    - 20
+  num_refs: 1
+  eval_at_char_level: false
+
+model_configs:
+  model: DL4MT
+  d_word_vec: 24
+  d_model: 24
+  dropout: 0.1
+  tie_input_output_embedding: true
+  tie_source_target_embedding: true
+  bridge_type: zero
+  label_smoothing: 0.1
+
+optimizer_configs:
+  optimizer: "adam"
+  learning_rate: 0.0005
+  grad_clip: 1.0
+  optimizer_params: ~ # other arguments for optimizer.
+  schedule_method: loss
+  scheduler_configs:
+    patience: 2
+    min_lr: 0.00005
+    scale: 0.5
+
+training_configs:
+  seed: 1234
+  max_epochs: 2
+  shuffle: false
+  use_bucket: true # Whether to use bucket. If true, model will run faster while a little bit performance regression.
+  buffer_size: 100 # Only valid when use_bucket is true.
+  batch_size: 10
+  batching_key: "samples"
+  update_cycle: -1
+  valid_batch_size: 100
+  disp_freq: 100
+  save_freq: 1000
+  num_kept_checkpoints: 1
+  loss_valid_freq: &decay_freq 10
+  bleu_valid_freq: 100
+  bleu_valid_batch_size: 3
+  bleu_valid_warmup: 1
+  bleu_valid_configs:
+    max_steps: 10
+    beam_size: 5
+    alpha: 0.6
+    sacrebleu_args: "--tokenize none -lc"
+    postprocess: false
+  early_stop_patience: 20

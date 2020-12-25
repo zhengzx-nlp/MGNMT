@@ -1,0 +1,9 @@
+image: "python:3.6"
+
+before_script:
+  - bash ./.travis/install.sh
+  - cp ./unittests/run_all_test.sh .
+
+test:
+  script:
+    - bash run_all_test.sh

@@ -1,0 +1,130 @@
+data_configs:
+  lang_pair:
+    - "de-en"
+    - "en-de"
+  train_data:  # parallel training dataset (tokenized but not bpe'ed)
+    - "/opt/tiger/nonauto/run/data/IWSLT16-DE-EN/train.de.norm.tok"
+    - "/opt/tiger/nonauto/run/data/IWSLT16-DE-EN/train.en.norm.tok"
+  valid_data: # (tokenized but not bpe'ed)
+    - "/opt/tiger/nonauto/run/data/WMT14-EN-DE/newstest2014.tok.de"
+    - "/opt/tiger/nonauto/run/data/WMT14-EN-DE/newstest2014.tok.en"
+  bleu_valid_reference: # (ground-truth reference)
+    - "/opt/tiger/nonauto/run/data/WMT14-EN-DE/newstest2014.en"
+    - "/opt/tiger/nonauto/run/data/WMT14-EN-DE/newstest2014.de"
+  train_data_mono: # NP training dataset (tokenized but not bpe'ed)
+    tgt: "/opt/tiger/nonauto/run/data/IWSLT16-DE-EN/mono/news-crawl.2013.en.shuffled.200k.tok"
+    src: "/opt/tiger/nonauto/run/data/IWSLT16-DE-EN/mono/news-crawl.2013.de.shuffled.200k.tok"
+  vocabularies:
+    - type: "bpe"
+      dict_path: "/opt/tiger/nonauto/run/data/IWSLT16-DE-EN/vocab.32K.json" # vocab of BPE
+      codes: "/opt/tiger/nonauto/run/data/IWSLT16-DE-EN/bpe.32K"  # BPE codes, used for automatically spliting dataset into bpe
+      max_n_words: -1
+    - type: "bpe"
+      dict_path: "/opt/tiger/nonauto/run/data/IWSLT16-DE-EN/vocab.32K.json"
+      codes: "/opt/tiger/nonauto/run/data/IWSLT16-DE-EN/bpe.32K"
+      max_n_words: -1
+  max_len:
+    - 100
+    - 100
+  num_refs:
+    - 1
+    - 1
+  eval_at_char_level:
+    - false
+    - false
+
+model_configs:
+  model: MGNMT
+  n_layers: 4
+  n_head: 4
+  d_word_vec: 384
+  d_model: 384
+  d_inner_hid: 768
+  latent_size: 100
+  latent_type: input
+  dropout: 0.1
+  label_smoothing: 0.1
+  tie_input_output_embedding: true
+  tie_source_target_embedding: true
+
+  # kl-annealing
+  anneal_function: logistic
+  k: 0.0025
+  # KL annealing step. 
+  # IMPORTANT: this value is tricky to tune. 
+  # Try to find a optimal value that ensures 
+  # the KL loss neither small nor big too much (usually ~3 to 6)
+  x0: 10000  
+  max_kl_weight: 1.0
+  step_kl_weight: ~
+  kl_factor: 1.0
+
+  # word (unk) dropout
+  unk_rate: 0.3
+  unk_schedule: fixed
+
+  # inferrer
+  inferrer_stop_grad_input: true
+  inferrer_type: RNN
+
+  # decoding
+  decoding_iterations: 3
+
+optimizer_configs:
+  optimizer: "adam"
+  learning_rate: 0.2
+  grad_clip: -1.0
+  optimizer_params: ~
+  schedule_method: noam
+  scheduler_configs:
+    d_model: 384
+    warmup_steps: 4000
+
+training_configs:
+  seed: 142857
+  max_epochs: 150
+  shuffle: true
+  use_bucket: true
+  batch_size: 4096
+  batching_key: "tokens"
+  # for gradient accumulation. So the real batch size = batch_size*update_cycle
+  update_cycle: 1  
+  valid_batch_size: 1000 # tokens
+  disp_freq: 500        # log to tensorboard
+  save_freq: 1000
+  num_kept_checkpoints: 1
+  loss_valid_freq: 1000
+  bleu_valid_freq: 2000 # calculate bleu score for validation
+  bleu_valid_batch_size: 2048 # tokens
+  bleu_valid_warmup: 3  # calculate bleu score after this many epochs
+  bleu_valid_configs:
+    - max_steps: 150
+      beam_size: 4
+      alpha: 0.6 # length penelty
+      # Suggest not to rerank and use LM in training for best training efficiency
+      reranking: false 
+      beta: 0.0  # weight for decoding using tgt_LM
+      gamma: 0.0  # weight for reconstructive reranking using src_LM
+      sacrebleu_args: "-tok intl -lc" # sacrebleu args (if applicable)
+      postprocess: true
+    - max_steps: 150
+      beam_size: 4
+      alpha: 0.6
+      reranking: false
+      beta: 0.0
+      gamma: 0.0
+      sacrebleu_args: "-tok intl -lc"
+      postprocess: true
+  early_stop_patience: 50
+  train_nonparallel_options:
+    # if enabling NP training
+    enable: false
+    # after this warmup step, start using NP data
+    NP_warmup_step: 100000
+    # hybrid training of P and NP or just finetuning on NP
+    NP_train_mode: "finetune" # ["finetune", "hybrid"]
+    # use BT data to update ALL models 
+    # or just models partially associated with target language
+    NP_update_mode: "all" # ["all", "partial"]
+    # use best model for BT
+    best_model_BT: true 

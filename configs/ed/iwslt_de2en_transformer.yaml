@@ -1,0 +1,70 @@
+data_configs:
+  lang_pair: "de-en"
+  train_data:
+    - "/home/zzheng/data/mt/IWSLT16-DE-EN/train.de.norm.tok"
+    - "/home/zzheng/data/mt/IWSLT16-DE-EN/train.en.norm.tok"
+  valid_data:
+    - "/home/zzheng/data/mt/WMT14-EN-DE/newstest2014.de.norm.tok"
+    - "/home/zzheng/data/mt/WMT14-EN-DE/newstest2014.en.norm.tok"
+  bleu_valid_reference: "/home/zzheng/data/mt/WMT14-EN-DE/newstest2014.en"
+  vocabularies:
+    - type: "bpe"
+      dict_path: "/home/zzheng/data/mt/IWSLT16-DE-EN/vocab.32K.json"
+      codes: "/home/zzheng/data/mt/IWSLT16-DE-EN/bpe.32K"
+      max_n_words: -1
+    - type: "bpe"
+      dict_path: "/home/zzheng/data/mt/IWSLT16-DE-EN/vocab.32K.json"
+      codes: "/home/zzheng/data/mt/IWSLT16-DE-EN/bpe.32K"
+      max_n_words: -1
+  max_len:
+    - 100
+    - 100
+  num_refs: 1
+  eval_at_char_level: false
+
+model_configs:
+  model: Transformer
+  n_layers: 4
+  n_head: 4
+  d_word_vec: 384
+  d_model: 384
+  d_inner_hid: 768
+  dropout: 0.1
+  proj_share_weight: true
+  tie_input_output_embedding: true
+  tie_source_target_embedding: true
+  label_smoothing: 0.1
+
+optimizer_configs:
+  optimizer: "adam"
+  learning_rate: 0.2
+  grad_clip: -1.0
+  optimizer_params: ~
+  schedule_method: noam
+  scheduler_configs:
+    d_model: 384
+    warmup_steps: 4000
+
+training_configs:
+  seed: 1234
+  max_epochs: 50
+  shuffle: true
+  use_bucket: true
+  batch_size: 4096
+  batching_key: "tokens"
+  update_cycle: 2
+  valid_batch_size: 20
+  disp_freq: 1000
+  save_freq: 1000
+  num_kept_checkpoints: 1
+  loss_valid_freq: 1000
+  bleu_valid_freq: 1000
+  bleu_valid_batch_size: 20
+  bleu_valid_warmup: 2
+  bleu_valid_configs:
+    max_steps: 150
+    beam_size: 4
+    alpha: 0.6
+    sacrebleu_args: "-tok intl -lc"
+    postprocess: true
+  early_stop_patience: 50

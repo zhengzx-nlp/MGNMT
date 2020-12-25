@@ -1,0 +1,68 @@
+data_configs:
+  lang_pair: "en-fr"
+  train_data:
+    - "/home/public_data/nmtdata/wmt15_en-fr/train/train_enfr.en.tok"
+    - "/home/public_data/nmtdata/wmt15_en-fr/train/train_enfr.fr.tok"
+  valid_data:
+    - "/home/public_data/nmtdata/wmt15_en-fr/test/newstest2013.en.tok"
+    - "/home/public_data/nmtdata/wmt15_en-fr/test/newstest2013.fr.tok"
+  bleu_valid_reference: "/home/public_data/nmtdata/wmt15_en-fr/test/newstest2013.fr.tok"
+  vocabularies:
+    - type: "bpe"
+      dict_path: "/home/public_data/nmtdata/wmt15_en-fr/vocab/vocab.bpe55k.en"
+      codes: "/home/public_data/nmtdata/wmt15_en-fr/vocab/code.bpe55k.en"
+      max_n_words: -1
+    - type: "bpe"
+      dict_path: "/home/public_data/nmtdata/wmt15_en-fr/vocab/vocab.bpe55k.fr"
+      codes: "/home/public_data/nmtdata/wmt15_en-fr/vocab/code.bpe55k.fr"
+      max_n_words: -1
+  max_len:
+    - 256
+    - 256
+  num_refs: 1
+  eval_at_char_level: false
+
+model_configs:
+  model: Transformer
+  n_layers: 6
+  n_head: 8
+  d_word_vec: 768
+  d_model: 768
+  d_inner_hid: 4096
+  dropout: 0.1
+  proj_share_weight: true
+  label_smoothing: 0.2
+
+optimizer_configs:
+  optimizer: "adafactor"
+  learning_rate: 1.0
+  grad_clip: -1.0
+  optimizer_params: ~
+  schedule_method: rsqrt
+  scheduler_configs:
+    d_model: 512
+    warmup_steps: 8000
+
+training_configs:
+  seed: 1234
+  max_epochs: 50
+  shuffle: true
+  use_bucket: true
+  batch_size: 2500
+  batching_key: "tokens"
+  update_cycle: 8
+  valid_batch_size: 10
+  disp_freq: 500
+  save_freq: 1000
+  num_kept_checkpoints: 2
+  loss_valid_freq: 1000
+  bleu_valid_freq: 1000
+  bleu_valid_batch_size: 10
+  bleu_valid_warmup: 0
+  bleu_valid_configs:
+    max_steps: 200
+    beam_size: 2
+    alpha: 0.0
+    sacrebleu_args: "--tokenize none -lc"
+    postprocess: false
+  early_stop_patience: 500

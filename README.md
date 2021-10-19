@@ -1,4 +1,4 @@
-# MGNMT
+# Mirror-Generative Neural Machine Translation (MGNMT)
 
 This repo is the implementation of [Mirror-Generative Neural Machine Translation](https://openreview.net/forum?id=HkxQRTNYPH).
 
